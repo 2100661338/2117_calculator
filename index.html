@@ -37,6 +37,7 @@
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
   header p { color: var(--muted); font-size: 12px; margin-top: 6px; letter-spacing: 1px; }
+  header p.topnote { color: #566074; font-size: 11px; margin-top: 5px; letter-spacing: 0; }
 
   .tabs {
     display: flex; background: var(--panel); border: 1px solid var(--line);
@@ -121,6 +122,7 @@
   <header>
     <h1>群星征途2117</h1>
     <p>公测充值返利计算器 · 汇率 1元 = 10信用点</p>
+    <p class="topnote">计算结果仅供参考，实际返还以游戏内发放为准</p>
   </header>
 
   <div class="tabs">
@@ -234,6 +236,15 @@
   function fmt(n) {
     return Number(n.toFixed(2)).toLocaleString("zh-CN", { maximumFractionDigits: 2 });
   }
+  // 整数结果直接显示准确数字；带小数的结果向下取整并加「约」
+  function fmtInt(n) {
+    return Math.floor(n).toLocaleString("zh-CN");
+  }
+  function approx(n) {
+    var r = Math.round(n);
+    if (Math.abs(n - r) < 1e-6) return r.toLocaleString("zh-CN");
+    return "约 " + fmtInt(n);
+  }
   function parseNum(s) {
     var v = parseFloat(String(s).replace(/[,，\s]/g, ""));
     return isFinite(v) ? v : NaN;
@@ -264,8 +275,8 @@
     }
 
     var g = calcStandardGold(amt);
-    credit.textContent = fmt(amt * RATE_CREDIT);
-    gold.textContent = fmt(g.total);
+    credit.textContent = approx(amt * RATE_CREDIT);
+    gold.textContent = approx(g.total);
 
     var rows = "";
     for (var i = 0; i < g.breakdown.length; i++) {
@@ -275,7 +286,7 @@
         + "<td" + (inTier ? "" : ' class="dim"') + ">" + b.label + "</td>"
         + "<td class=\"" + (inTier ? "" : "dim") + "\">" + (inTier ? fmt(b.portion) + " 元" : "—") + "</td>"
         + "<td class=\"" + (inTier ? "" : "dim") + "\">" + (b.perYuan === 0 ? "无" : (b.perYuan * 10) + "%") + "</td>"
-        + "<td class=\"" + (inTier && b.gold > 0 ? "" : "dim") + "\">" + (b.perYuan === 0 || !inTier ? "—" : fmt(b.gold)) + "</td>"
+        + "<td class=\"" + (inTier && b.gold > 0 ? "" : "dim") + "\">" + (b.perYuan === 0 || !inTier ? "—" : approx(b.gold)) + "</td>"
         + "</tr>";
     }
     document.getElementById("breakBody").innerHTML = rows;
@@ -323,11 +334,12 @@
     }
 
     if (targetType === "credit") {
-      var yuan = Math.ceil((target / RATE_CREDIT) * 100) / 100;
-      need.textContent = fmt(yuan) + " 元";
+      var rawYuan = target / RATE_CREDIT;
+      var yuan = Math.floor(rawYuan);
+      need.textContent = approx(rawYuan) + " 元";
       hint.className = "hint";
-      hint.innerHTML = "充值 <b>" + fmt(yuan) + "</b> 元可获得约 " + fmt(yuan * RATE_CREDIT)
-        + " 信用点，同时附带标准金 " + fmt(calcStandardGold(yuan).total) + "。";
+      hint.innerHTML = "充值 <b>" + approx(rawYuan) + "</b> 元可获得 " + approx(yuan * RATE_CREDIT)
+        + " 信用点，同时附带 " + approx(calcStandardGold(yuan).total) + " 标准金。";
     } else {
       var y = amountForGold(target);
       if (y === null) {
@@ -335,11 +347,11 @@
         hint.className = "hint warn";
         hint.innerHTML = "标准金最高只有 <b>96,000</b>（累计充值 15,000 元封顶），无法达到该目标。";
       } else {
-        var yc = Math.ceil(y * 100) / 100;
-        need.textContent = fmt(yc) + " 元";
+        var yc = Math.floor(y);
+        need.textContent = approx(y) + " 元";
         hint.className = "hint";
-        hint.innerHTML = "充值 <b>" + fmt(yc) + "</b> 元可获得标准金 " + fmt(calcStandardGold(yc).total)
-          + "，同时返还信用点 " + fmt(yc * RATE_CREDIT) + "。";
+        hint.innerHTML = "充值 <b>" + approx(y) + "</b> 元可获得 " + approx(calcStandardGold(yc).total)
+          + " 标准金，同时返还 " + approx(yc * RATE_CREDIT) + " 信用点。";
       }
     }
   }
