@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>群星征途2117 · 充值返利计算器</title>
+<style>
+  :root {
+    --bg: #0b0d12;
+    --panel: #14181f;
+    --panel2: #1b212b;
+    --line: #2a3240;
+    --red: #c0392b;
+    --red-bright: #e74c3c;
+    --gold: #e8b94a;
+    --blue: #4da3ff;
+    --text: #e8ecf2;
+    --muted: #8a94a6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse 80% 40% at 50% -10%, rgba(192,57,43,.18), transparent),
+      radial-gradient(ellipse 60% 30% at 80% 110%, rgba(77,163,255,.08), transparent);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+    min-height: 100vh;
+    padding: 16px 12px 40px;
+  }
+  .wrap { max-width: 480px; margin: 0 auto; }
+
+  header { text-align: center; padding: 8px 0 18px; }
+  header h1 {
+    font-size: 21px; letter-spacing: 2px;
+    background: linear-gradient(90deg, #ffd98a, var(--gold), #ffd98a);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  header p { color: var(--muted); font-size: 12px; margin-top: 6px; letter-spacing: 1px; }
+
+  .tabs {
+    display: flex; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 12px; overflow: hidden; margin-bottom: 14px;
+  }
+  .tabs button {
+    flex: 1; padding: 13px 0; font-size: 15px; border: none; cursor: pointer;
+    background: transparent; color: var(--muted); font-weight: 600;
+    transition: background .2s, color .2s;
+  }
+  .tabs button.active {
+    background: linear-gradient(180deg, var(--red-bright), var(--red));
+    color: #fff;
+  }
+
+  .card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 14px; padding: 18px 16px; margin-bottom: 14px;
+  }
+  .card h2 { font-size: 14px; color: var(--gold); margin-bottom: 12px; letter-spacing: 1px; }
+
+  label.field { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  input[type=text] {
+    width: 100%; padding: 14px 12px; font-size: 20px; font-weight: 600;
+    background: var(--panel2); color: var(--text);
+    border: 1px solid var(--line); border-radius: 10px; outline: none;
+  }
+  input[type=text]:focus { border-color: var(--red-bright); }
+
+  .seg { display: flex; gap: 8px; margin-bottom: 12px; }
+  .seg button {
+    flex: 1; padding: 11px 0; font-size: 14px; border-radius: 10px; cursor: pointer;
+    background: var(--panel2); color: var(--muted); border: 1px solid var(--line); font-weight: 600;
+  }
+  .seg button.active { border-color: var(--gold); color: var(--gold); background: rgba(232,185,74,.08); }
+
+  .result-main {
+    display: flex; gap: 10px; margin-top: 14px;
+  }
+  .result-box {
+    flex: 1; background: var(--panel2); border: 1px solid var(--line);
+    border-radius: 10px; padding: 12px 10px; text-align: center;
+  }
+  .result-box .lbl { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .result-box .val { font-size: 22px; font-weight: 700; word-break: break-all; }
+  .val.credit { color: var(--blue); }
+  .val.gold { color: var(--gold); }
+  .val.money { color: #7ee08a; }
+
+  .breakdown { margin-top: 14px; }
+  .breakdown table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .breakdown th, .breakdown td {
+    padding: 8px 6px; text-align: center; border-bottom: 1px solid var(--line);
+  }
+  .breakdown th { color: var(--muted); font-weight: 500; font-size: 12px; }
+  .breakdown td { color: var(--text); }
+  .breakdown tr:last-child td { border-bottom: none; }
+  .breakdown .dim { color: var(--muted); }
+
+  .hint { margin-top: 12px; font-size: 13px; color: var(--muted); line-height: 1.7; }
+  .hint.warn { color: var(--red-bright); }
+  .hint b { color: var(--gold); }
+
+  .rules table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .rules th {
+    background: linear-gradient(180deg, var(--red), #8e2a1f);
+    color: #fff; padding: 9px 4px; font-weight: 600; font-size: 12px;
+  }
+  .rules td {
+    padding: 9px 4px; text-align: center; border-bottom: 1px solid var(--line);
+    background: var(--panel2);
+  }
+  .rules tr:last-child td { border-bottom: none; }
+  .rules .note { margin-top: 10px; font-size: 12px; color: var(--muted); line-height: 1.7; }
+
+  footer { text-align: center; color: #566074; font-size: 11px; margin-top: 8px; line-height: 1.8; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>群星征途2117</h1>
+    <p>公测充值返利计算器 · 汇率 1元 = 10信用点</p>
+  </header>
+
+  <div class="tabs">
+    <button id="tabF" class="active" onclick="switchTab('F')">正向计算</button>
+    <button id="tabR" onclick="switchTab('R')">反向计算</button>
+  </div>
+
+  <!-- 正向 -->
+  <div id="panelF" class="card">
+    <h2>输入累计充值金额，计算公测返还</h2>
+    <label class="field" for="inAmount">历次测试累计充值金额（元）</label>
+    <input type="text" id="inAmount" inputmode="decimal" placeholder="例如：500" autocomplete="off">
+    <div class="result-main">
+      <div class="result-box">
+        <div class="lbl">信用点返还（135%）</div>
+        <div class="val credit" id="outCredit">—</div>
+      </div>
+      <div class="result-box">
+        <div class="lbl">标准金返还</div>
+        <div class="val gold" id="outGold">—</div>
+      </div>
+    </div>
+    <div class="breakdown hidden" id="breakWrap">
+      <table>
+        <thead><tr><th>区间（元）</th><th>计入金额</th><th>比例</th><th>标准金</th></tr></thead>
+        <tbody id="breakBody"></tbody>
+      </table>
+    </div>
+    <div class="hint" id="hintF">输入金额后自动计算，标准金按区间分段累进。</div>
+  </div>
+
+  <!-- 反向 -->
+  <div id="panelR" class="card hidden">
+    <h2>输入目标返还，反推所需充值金额</h2>
+    <div class="seg">
+      <button id="segCredit" class="active" onclick="switchTarget('credit')">目标信用点</button>
+      <button id="segGold" onclick="switchTarget('gold')">目标标准金</button>
+    </div>
+    <label class="field" for="inTarget" id="targetLabel">想要的信用点数量</label>
+    <input type="text" id="inTarget" inputmode="decimal" placeholder="例如：6750" autocomplete="off">
+    <div class="result-main">
+      <div class="result-box">
+        <div class="lbl">需要累计充值</div>
+        <div class="val money" id="outNeed">—</div>
+      </div>
+    </div>
+    <div class="hint" id="hintR">信用点 = 金额×10×135%；标准金最高 <b>96,000</b>（充值 15,000 元封顶）。</div>
+  </div>
+
+  <!-- 规则表 -->
+  <div class="card rules">
+    <h2>官方返利规则速查</h2>
+    <table>
+      <thead><tr><th>累计充值金额</th><th>信用点返还</th><th>标准金返还</th></tr></thead>
+      <tbody>
+        <tr><td>1 — 100 元</td><td>135%</td><td>300%</td></tr>
+        <tr><td>101 — 500 元</td><td>135%</td><td>200%</td></tr>
+        <tr><td>501 — 3,000 元</td><td>135%</td><td>100%</td></tr>
+        <tr><td>3,001 — 15,000 元</td><td>135%</td><td>50%</td></tr>
+        <tr><td>≥ 15,001 元</td><td>135%</td><td>无</td></tr>
+      </tbody>
+    </table>
+    <div class="note">
+      · 信用点按累计充值金额全额 ×10×135% 固定返还。<br>
+      · 标准金按区间分段累进：每一段只对落在该段内的金额，按该段比例 ×10 计算后求和。<br>
+      · 官方示例：累计 500 元 → 信用点 6,750，标准金 3,000 + 8,000 = 11,000。
+    </div>
+  </div>
+
+  <footer>本工具按官方公布规则计算，仅供参考<br>实际返还以游戏内发放为准</footer>
+</div>
+
+<script>
+  var RATE_CREDIT = 13.5;           // 每元返还信用点 = 10 × 135%
+  var GOLD_CAP = 96000;             // 标准金上限
+  // 标准金分段：[区间上限（元）, 每元标准金]，最后一段无返还
+  var TIERS = [
+    { from: 0,     to: 100,      perYuan: 30, label: "1 — 100" },
+    { from: 100,   to: 500,      perYuan: 20, label: "101 — 500" },
+    { from: 500,   to: 3000,     perYuan: 10, label: "501 — 3,000" },
+    { from: 3000,  to: 15000,    perYuan: 5,  label: "3,001 — 15,000" },
+    { from: 15000, to: Infinity, perYuan: 0,  label: "≥ 15,001" }
+  ];
+
+  function calcStandardGold(amount) {
+    var total = 0, breakdown = [];
+    for (var i = 0; i < TIERS.length; i++) {
+      var t = TIERS[i];
+      var portion = Math.max(0, Math.min(amount, t.to) - t.from);
+      var gold = portion * t.perYuan;
+      total += gold;
+      breakdown.push({ label: t.label, portion: portion, perYuan: t.perYuan, gold: gold });
+    }
+    return { total: total, breakdown: breakdown };
+  }
+
+  // 反推：目标标准金 → 所需金额（超上限返回 null）
+  function amountForGold(target) {
+    if (target > GOLD_CAP) return null;
+    var remain = target;
+    for (var i = 0; i < TIERS.length; i++) {
+      var t = TIERS[i];
+      if (t.perYuan === 0) break;
+      var tierMax = (t.to - t.from) * t.perYuan;
+      if (remain <= tierMax) return t.from + remain / t.perYuan;
+      remain -= tierMax;
+    }
+    return 15000;
+  }
+
+  function fmt(n) {
+    return Number(n.toFixed(2)).toLocaleString("zh-CN", { maximumFractionDigits: 2 });
+  }
+  function parseNum(s) {
+    var v = parseFloat(String(s).replace(/[,，\s]/g, ""));
+    return isFinite(v) ? v : NaN;
+  }
+
+  // ---- 正向 ----
+  function updateForward() {
+    var raw = document.getElementById("inAmount").value.trim();
+    var credit = document.getElementById("outCredit");
+    var gold = document.getElementById("outGold");
+    var wrap = document.getElementById("breakWrap");
+    var hint = document.getElementById("hintF");
+
+    if (raw === "") {
+      credit.textContent = gold.textContent = "—";
+      wrap.classList.add("hidden");
+      hint.className = "hint";
+      hint.textContent = "输入金额后自动计算，标准金按区间分段累进。";
+      return;
+    }
+    var amt = parseNum(raw);
+    if (isNaN(amt) || amt <= 0) {
+      credit.textContent = gold.textContent = "—";
+      wrap.classList.add("hidden");
+      hint.className = "hint warn";
+      hint.textContent = "请输入大于 0 的金额数字。";
+      return;
+    }
+
+    var g = calcStandardGold(amt);
+    credit.textContent = fmt(amt * RATE_CREDIT);
+    gold.textContent = fmt(g.total);
+
+    var rows = "";
+    for (var i = 0; i < g.breakdown.length; i++) {
+      var b = g.breakdown[i];
+      var inTier = b.portion > 0;
+      rows += "<tr" + (inTier ? "" : ' class="dim"') + ">"
+        + "<td" + (inTier ? "" : ' class="dim"') + ">" + b.label + "</td>"
+        + "<td class=\"" + (inTier ? "" : "dim") + "\">" + (inTier ? fmt(b.portion) + " 元" : "—") + "</td>"
+        + "<td class=\"" + (inTier ? "" : "dim") + "\">" + (b.perYuan === 0 ? "无" : (b.perYuan * 10) + "%") + "</td>"
+        + "<td class=\"" + (inTier && b.gold > 0 ? "" : "dim") + "\">" + (b.perYuan === 0 || !inTier ? "—" : fmt(b.gold)) + "</td>"
+        + "</tr>";
+    }
+    document.getElementById("breakBody").innerHTML = rows;
+    wrap.classList.remove("hidden");
+
+    hint.className = "hint";
+    if (amt > 15000) {
+      hint.innerHTML = "超过 15,000 元的部分不再赠送标准金，标准金已达上限 <b>96,000</b>。";
+    } else {
+      hint.textContent = "标准金按区间分段累进计算，明细见上表。";
+    }
+  }
+
+  // ---- 反向 ----
+  var targetType = "credit";
+  function switchTarget(type) {
+    targetType = type;
+    document.getElementById("segCredit").className = type === "credit" ? "active" : "";
+    document.getElementById("segGold").className = type === "gold" ? "active" : "";
+    document.getElementById("targetLabel").textContent =
+      type === "credit" ? "想要的信用点数量" : "想要的标准金数量";
+    document.getElementById("inTarget").placeholder =
+      type === "credit" ? "例如：6750" : "例如：11000";
+    updateReverse();
+  }
+
+  function updateReverse() {
+    var raw = document.getElementById("inTarget").value.trim();
+    var need = document.getElementById("outNeed");
+    var hint = document.getElementById("hintR");
+    var defaultHint = '信用点 = 金额×10×135%；标准金最高 <b>96,000</b>（充值 15,000 元封顶）。';
+
+    if (raw === "") {
+      need.textContent = "—";
+      hint.className = "hint";
+      hint.innerHTML = defaultHint;
+      return;
+    }
+    var target = parseNum(raw);
+    if (isNaN(target) || target <= 0) {
+      need.textContent = "—";
+      hint.className = "hint warn";
+      hint.textContent = "请输入大于 0 的目标数值。";
+      return;
+    }
+
+    if (targetType === "credit") {
+      var yuan = Math.ceil((target / RATE_CREDIT) * 100) / 100;
+      need.textContent = fmt(yuan) + " 元";
+      hint.className = "hint";
+      hint.innerHTML = "充值 <b>" + fmt(yuan) + "</b> 元可获得约 " + fmt(yuan * RATE_CREDIT)
+        + " 信用点，同时附带标准金 " + fmt(calcStandardGold(yuan).total) + "。";
+    } else {
+      var y = amountForGold(target);
+      if (y === null) {
+        need.textContent = "无法达成";
+        hint.className = "hint warn";
+        hint.innerHTML = "标准金最高只有 <b>96,000</b>（累计充值 15,000 元封顶），无法达到该目标。";
+      } else {
+        var yc = Math.ceil(y * 100) / 100;
+        need.textContent = fmt(yc) + " 元";
+        hint.className = "hint";
+        hint.innerHTML = "充值 <b>" + fmt(yc) + "</b> 元可获得标准金 " + fmt(calcStandardGold(yc).total)
+          + "，同时返还信用点 " + fmt(yc * RATE_CREDIT) + "。";
+      }
+    }
+  }
+
+  // ---- Tab ----
+  function switchTab(which) {
+    document.getElementById("tabF").className = which === "F" ? "active" : "";
+    document.getElementById("tabR").className = which === "R" ? "active" : "";
+    document.getElementById("panelF").className = which === "F" ? "card" : "card hidden";
+    document.getElementById("panelR").className = which === "R" ? "card" : "card hidden";
+  }
+
+  document.getElementById("inAmount").addEventListener("input", updateForward);
+  document.getElementById("inTarget").addEventListener("input", updateReverse);
+</script>
+</body>
+</html>
